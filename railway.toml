@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run build --workspace=packages/shared-types && npm run prisma:generate && npm run build --workspace=@feecore/api"
+
+[deploy]
+startCommand = "npm run prisma:migrate:deploy && node backend/dist/main/main.js"
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
