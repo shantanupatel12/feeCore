@@ -93,7 +93,7 @@ async function bootstrap() {
       : corsOriginEnv
     : isProd
       ? false
-      : 'http://localhost:5173';
+      : ['http://localhost:5180', 'http://localhost:5173'];
 
   app.enableCors({
     origin: corsOrigin,

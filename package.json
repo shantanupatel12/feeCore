@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces",
+    "dev": "node scripts/dev.mjs",
     "dev:api": "npm run start:dev --workspace=@feecore/api",
     "dev:web": "npm run dev --workspace=@feecore/web",
     "start:api": "npm run start:prod --workspace=@feecore/api",
@@ -18,7 +18,8 @@
     "prisma:generate": "npm run prisma:generate --workspace=@feecore/api",
     "prisma:migrate": "npm run prisma:migrate --workspace=@feecore/api",
     "prisma:migrate:deploy": "npm run prisma:migrate:deploy --workspace=@feecore/api",
-    "db:start": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe' -D 'C:\\Users\\shant\\.feecore\\pgdata' -p 5433\""
+    "seed:demo": "npm run seed:demo --workspace=@feecore/api",
+    "db:start": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe' -D 'C:\\Users\\shant\\.feecore\\pgdata' -p 5432\""
   },
   "devDependencies": {
     "typescript": "^5.4.5"
