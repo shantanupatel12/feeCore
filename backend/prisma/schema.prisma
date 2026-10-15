@@ -1,0 +1,454 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ROLE_ADMIN
+  ROLE_COLLECTOR
+  ROLE_VIEWER
+}
+
+enum DueStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOIDED
+}
+
+enum PaymentStatus {
+  SUCCESSFUL
+  PARTIALLY_REFUNDED
+  FULLY_REFUNDED
+  FAILED
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CARD
+  CHEQUE
+  OTHER
+}
+
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum RecurringPlanStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum PersonStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CustomFieldDataType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  BOOLEAN
+}
+
+/// FR-CHG-003 / BR-CHG-003 late fee penalty calculation types.
+enum LateFeeCalculationType {
+  FIXED
+  DAILY
+}
+
+enum RefundType {
+  DUE_ALLOCATION
+  ADVANCE_WALLET
+}
+
+model Tenant {
+  id         String          @id @default(uuid()) @db.Uuid
+  name       String          @db.VarChar(255)
+  category   String          @default("Other") @db.VarChar(100)
+  /// FR-ORG-01 organization profile fields.
+  address    String?         @map("address") @db.Text
+  taxId      String?         @map("tax_id") @db.VarChar(100)
+  logoUrl    String?         @map("logo_url") @db.VarChar(500)
+  currency   String          @default("INR") @db.VarChar(10)
+  timezone   String          @default("Asia/Kolkata") @db.VarChar(50)
+  status     String          @default("ACTIVE") @db.VarChar(50)
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  settings           TenantSettings?
+  users              User[]
+  customFields       CustomFieldDefinition[]
+  people             Person[]
+  recurringPlans     RecurringPlan[]
+  charges            Charge[]
+  lateFeeRules       LateFeeRule[]
+  dues               Due[]
+  payments           Payment[]
+  paymentAllocations PaymentAllocation[]
+  receiptSequences   ReceiptSequence[]
+  receipts           Receipt[]
+  refunds            Refund[]
+  financialLogs      FinancialTransactionLog[]
+  auditLogs          AuditLog[]
+  outbox             NotificationOutbox[]
+  importJobs         ImportJob[]
+
+  @@map("tenants")
+}
+
+model TenantSettings {
+  tenantId               String   @id @map("tenant_id") @db.Uuid
+  personLabelSingular    String   @default("Person") @map("person_label_singular") @db.VarChar(100)
+  personLabelPlural      String   @default("People") @map("person_label_plural") @db.VarChar(100)
+  chargeLabelSingular    String   @default("Charge") @map("charge_label_singular") @db.VarChar(100)
+  chargeLabelPlural      String   @default("Charges") @map("charge_label_plural") @db.VarChar(100)
+  receiptPrefix          String   @default("REC") @map("receipt_prefix") @db.VarChar(20)
+  receiptFooterText      String?  @map("receipt_footer_text") @db.Text
+  autoApplyAdvance       Boolean  @default(false) @map("auto_apply_advance")
+  lateFeePriority        String   @default("PRINCIPAL_FIRST") @map("late_fee_priority") @db.VarChar(30)
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  email        String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  fullName     String    @map("full_name") @db.VarChar(255)
+  role         UserRole  @default(ROLE_COLLECTOR)
+  status       String    @default("ACTIVE") @db.VarChar(50)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  charges      Charge[]
+  payments     Payment[]
+  refunds      Refund[]
+  financialLogs FinancialTransactionLog[]
+  auditLogs    AuditLog[]
+  importJobs   ImportJob[]
+
+  @@unique([tenantId, email], name: "uq_tenant_user_email")
+  @@map("users")
+}
+
+model CustomFieldDefinition {
+  id           String              @id @default(uuid()) @db.Uuid
+  tenantId     String              @map("tenant_id") @db.Uuid
+  fieldKey     String              @map("field_key") @db.VarChar(100)
+  fieldLabel   String              @map("field_label") @db.VarChar(100)
+  dataType     CustomFieldDataType @map("data_type")
+  isRequired   Boolean             @default(false) @map("is_required")
+  options      Json?               @db.JsonB
+  displayOrder Int                 @default(0) @map("display_order")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey], name: "uq_tenant_field_key")
+  @@map("custom_field_definitions")
+}
+
+model Person {
+  id             String       @id @default(uuid()) @db.Uuid
+  tenantId       String       @map("tenant_id") @db.Uuid
+  fullName       String       @map("full_name") @db.VarChar(255)
+  primaryPhone   String       @map("primary_phone") @db.VarChar(50)
+  secondaryPhone String?      @map("secondary_phone") @db.VarChar(50)
+  email          String?      @db.VarChar(255)
+  address        String?      @db.Text
+  advanceBalance BigInt       @default(0) @map("advance_balance")
+  customData     Json         @default("{}") @map("custom_data") @db.JsonB
+  status         PersonStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  recurringPlans RecurringPlan[]
+  charges        Charge[]
+  dues           Due[]
+  payments       Payment[]
+  refunds        Refund[]
+  financialLogs  FinancialTransactionLog[]
+
+  @@index([tenantId, fullName, primaryPhone], name: "idx_people_search")
+  @@map("people")
+}
+
+model RecurringPlan {
+  id                String              @id @default(uuid()) @db.Uuid
+  tenantId          String              @map("tenant_id") @db.Uuid
+  personId          String              @map("person_id") @db.Uuid
+  category          String              @db.VarChar(100)
+  baseAmount        BigInt              @map("base_amount")
+  frequency         RecurringFrequency
+  anchorDay         Int                 @default(1) @map("anchor_day")
+  startDate         DateTime            @map("start_date") @db.Date
+  endDate           DateTime?           @map("end_date") @db.Date
+  nextExecutionDate DateTime            @map("next_execution_date") @db.Date
+  status            RecurringPlanStatus @default(ACTIVE)
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  person Person @relation(fields: [personId], references: [id], onDelete: Restrict)
+  charges Charge[]
+  dues    Due[]
+
+  @@map("recurring_plans")
+}
+
+model Charge {
+  id              String         @id @default(uuid()) @db.Uuid
+  tenantId        String         @map("tenant_id") @db.Uuid
+  personId        String         @map("person_id") @db.Uuid
+  recurringPlanId String?        @map("recurring_plan_id") @db.Uuid
+  category        String         @db.VarChar(100)
+  description     String?        @db.Text
+  baseAmount      BigInt         @map("base_amount")
+  discountAmount  BigInt         @default(0) @map("discount_amount")
+  createdByUserId String         @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  person        Person         @relation(fields: [personId], references: [id], onDelete: Restrict)
+  recurringPlan RecurringPlan? @relation(fields: [recurringPlanId], references: [id], onDelete: SetNull)
+  createdByUser User           @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  dues          Due[]
+
+  @@map("charges")
+}
+
+model LateFeeRule {
+  id              String                 @id @default(uuid()) @db.Uuid
+  tenantId        String                 @map("tenant_id") @db.Uuid
+  calculationType LateFeeCalculationType @map("calculation_type")
+  /// FIXED: the flat penalty. DAILY: the penalty charged per overdue day.
+  amountMinor     BigInt                 @map("amount_minor")
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId], name: "uq_late_fee_rule_per_tenant")
+  @@map("late_fee_rules")
+}
+
+model Due {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @map("tenant_id") @db.Uuid
+  personId         String         @map("person_id") @db.Uuid
+  chargeId         String         @map("charge_id") @db.Uuid
+  recurringPlanId  String?        @map("recurring_plan_id") @db.Uuid
+  cyclePeriodKey   String?        @map("cycle_period_key") @db.VarChar(100)
+  dueDate          DateTime       @map("due_date") @db.Date
+  netAmount        BigInt         @map("net_amount")
+  lateFeeAmount    BigInt         @default(0) @map("late_fee_amount")
+  /// Portion of lateFeeAmount contributed by the automatic rule engine,
+  /// so a repeated DAILY_CRON_EVAL cannot charge the same days twice.
+  ruleLateFeeAmount BigInt        @default(0) @map("rule_late_fee_amount")
+  balanceRemaining BigInt         @map("balance_remaining")
+  status           DueStatus      @default(PENDING)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  person             Person              @relation(fields: [personId], references: [id], onDelete: Restrict)
+  charge             Charge              @relation(fields: [chargeId], references: [id], onDelete: Restrict)
+  recurringPlan      RecurringPlan?      @relation(fields: [recurringPlanId], references: [id], onDelete: SetNull)
+  paymentAllocations PaymentAllocation[]
+
+  @@unique([tenantId, recurringPlanId, cyclePeriodKey], name: "uq_recurring_due_idempotency")
+  @@index([tenantId, status, dueDate, balanceRemaining], name: "idx_dues_dashboard")
+  @@index([tenantId, personId, balanceRemaining], name: "idx_dues_person")
+  @@map("dues")
+}
+
+model Payment {
+  id                 String        @id @default(uuid()) @db.Uuid
+  tenantId           String        @map("tenant_id") @db.Uuid
+  personId           String        @map("person_id") @db.Uuid
+  collectorUserId    String        @map("collector_user_id") @db.Uuid
+  paymentMode        PaymentMode   @map("payment_mode")
+  totalAmount        BigInt        @map("total_amount")
+  allocatedToDues    BigInt        @default(0) @map("allocated_to_dues")
+  creditedToAdvance  BigInt        @default(0) @map("credited_to_advance")
+  referenceNumber    String?       @map("reference_number") @db.VarChar(100)
+  notes              String?       @db.Text
+  idempotencyKey     String        @map("idempotency_key") @db.VarChar(255)
+  status             PaymentStatus @default(SUCCESSFUL)
+  paymentDate        DateTime      @default(now()) @map("payment_date") @db.Timestamptz
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  person             Person              @relation(fields: [personId], references: [id], onDelete: Restrict)
+  collectorUser      User                @relation(fields: [collectorUserId], references: [id], onDelete: Restrict)
+  paymentAllocations PaymentAllocation[]
+  receipts           Receipt[]
+  refunds            Refund[]
+
+  @@unique([tenantId, idempotencyKey], name: "uq_payment_idempotency")
+  @@index([tenantId, paymentDate, totalAmount], name: "idx_payments_dashboard")
+  @@map("payments")
+}
+
+model PaymentAllocation {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  paymentId          String   @map("payment_id") @db.Uuid
+  dueId              String   @map("due_id") @db.Uuid
+  allocatedPrincipal BigInt   @default(0) @map("allocated_principal")
+  allocatedLateFee   BigInt   @default(0) @map("allocated_late_fee")
+  totalAllocated     BigInt   @map("total_allocated")
+  refundedAmount     BigInt   @default(0) @map("refunded_amount")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  payment Payment  @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  due     Due      @relation(fields: [dueId], references: [id], onDelete: Restrict)
+  refunds Refund[]
+
+  @@map("payment_allocations")
+}
+
+model ReceiptSequence {
+  tenantId        String @map("tenant_id") @db.Uuid
+  fiscalYear      String @map("fiscal_year") @db.VarChar(10)
+  currentSequence Int    @default(0) @map("current_sequence")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, fiscalYear])
+  @@map("receipt_sequences")
+}
+
+model Receipt {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  paymentId     String   @map("payment_id") @db.Uuid
+  receiptNumber String   @map("receipt_number") @db.VarChar(100)
+  snapshotData  Json     @map("snapshot_data") @db.JsonB
+  issuedAt      DateTime @default(now()) @map("issued_at") @db.Timestamptz
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, receiptNumber], name: "uq_tenant_receipt_number")
+  @@map("receipts")
+}
+
+model Refund {
+  id                  String     @id @default(uuid()) @db.Uuid
+  tenantId            String     @map("tenant_id") @db.Uuid
+  refundType          RefundType @map("refund_type")
+  paymentId           String?    @map("payment_id") @db.Uuid
+  paymentAllocationId String?    @map("payment_allocation_id") @db.Uuid
+  personId            String     @map("person_id") @db.Uuid
+  processedByUserId   String     @map("processed_by_user_id") @db.Uuid
+  refundAmount        BigInt     @map("refund_amount")
+  refundReason        String     @map("refund_reason") @db.Text
+  refundMode          String     @map("refund_mode") @db.VarChar(50)
+  referenceNumber     String?    @map("reference_number") @db.VarChar(100)
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  payment           Payment?           @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  paymentAllocation PaymentAllocation? @relation(fields: [paymentAllocationId], references: [id], onDelete: Restrict)
+  person            Person             @relation(fields: [personId], references: [id], onDelete: Restrict)
+  processedByUser   User               @relation(fields: [processedByUserId], references: [id], onDelete: Restrict)
+
+  @@map("refunds")
+}
+
+model FinancialTransactionLog {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  personId            String   @map("person_id") @db.Uuid
+  eventType           String   @map("event_type") @db.VarChar(50)
+  referenceEntityType String   @map("reference_entity_type") @db.VarChar(50)
+  referenceEntityId   String   @map("reference_entity_id") @db.Uuid
+  amount              BigInt
+  balanceSnapshot     BigInt   @map("balance_snapshot")
+  metadata            Json?    @db.JsonB
+  performedByUserId   String   @map("performed_by_user_id") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  person          Person @relation(fields: [personId], references: [id], onDelete: Restrict)
+  performedByUser User   @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, personId, createdAt], name: "idx_financial_ledger_person")
+  @@map("financial_transaction_logs")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  userId      String?  @map("user_id") @db.Uuid
+  action      String   @db.VarChar(100)
+  entityType  String   @map("entity_type") @db.VarChar(100)
+  entityId    String   @map("entity_id") @db.Uuid
+  beforeState Json?    @map("before_state") @db.JsonB
+  afterState  Json?    @map("after_state") @db.JsonB
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  userAgent   String?  @map("user_agent") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("audit_logs")
+}
+
+/// FR-IMP-01 bulk People CSV import: durable row-level diagnostics.
+model ImportJob {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  totalRows    Int      @map("total_rows")
+  successCount Int      @map("success_count")
+  failureCount Int      @map("failure_count")
+  /// Row-level diagnostics: [{ row, message }] for rejected rows.
+  errors       Json?    @db.JsonB
+  performedByUserId String @map("performed_by_user_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  performedByUser User   @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, createdAt], name: "idx_import_jobs_tenant")
+  @@map("import_jobs")
+}
+
+model NotificationOutbox {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  channel     String   @db.VarChar(50)
+  recipient   String   @db.VarChar(255)
+  eventType   String   @map("event_type") @db.VarChar(100)
+  payload     Json     @db.JsonB
+  status      String   @default("PENDING") @db.VarChar(50)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("notification_outbox")
+}

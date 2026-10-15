@@ -1,0 +1,33 @@
+{
+  "name": "feecore-universal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FeeCore Universal — Universal Fee, Charge & Collection Platform",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "dev:api": "npm run start:dev --workspace=@feecore/api",
+    "dev:web": "npm run dev --workspace=@feecore/web",
+    "start:api": "npm run start:prod --workspace=@feecore/api",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "prisma:generate": "npm run prisma:generate --workspace=@feecore/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@feecore/api",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy --workspace=@feecore/api",
+    "db:start": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe' -D 'C:\\Users\\shant\\.feecore\\pgdata' -p 5433\""
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1"
+  },
+  "overrides": {
+    "@nestjs/common": "^10.4.22"
+  }
+}

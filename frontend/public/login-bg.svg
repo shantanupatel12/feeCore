@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+  <defs>
+    <!-- Main radial gradient for deep background -->
+    <radialGradient id="bg-main" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0D0A1A"/>
+      <stop offset="50%" stop-color="#080711"/>
+      <stop offset="100%" stop-color="#050408"/>
+    </radialGradient>
+
+    <!-- Purple glow gradients - increased opacity -->
+    <radialGradient id="glow-1" cx="20%" cy="30%" r="45%">
+      <stop offset="0%" stop-color="#8B35FF" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#8B35FF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#8B35FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow-2" cx="80%" cy="70%" r="40%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#A855F7" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow-3" cx="50%" cy="85%" r="35%">
+      <stop offset="0%" stop-color="#6B25D1" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#6B25D1" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#6B25D1" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow-4" cx="15%" cy="65%" r="30%">
+      <stop offset="0%" stop-color="#8B35FF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#8B35FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow-5" cx="90%" cy="25%" r="35%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Soft blur for glows -->
+    <filter id="soft-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="80" result="blur"/>
+      <feBlend in="SourceGraphic" in2="blur" mode="screen"/>
+    </filter>
+
+    <!-- Noise filter for texture -->
+    <filter id="noise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="4" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.03"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1920" height="1080" fill="url(#bg-main)"/>
+
+  <!-- Large ambient glows -->
+  <ellipse cx="384" cy="324" rx="864" ry="486" fill="url(#glow-1)" filter="url(#soft-glow)"/>
+  <ellipse cx="1536" cy="756" rx="768" ry="432" fill="url(#glow-2)" filter="url(#soft-glow)"/>
+  <ellipse cx="960" cy="918" rx="672" ry="378" fill="url(#glow-3)" filter="url(#soft-glow)"/>
+  <ellipse cx="288" cy="702" rx="576" ry="324" fill="url(#glow-4)" filter="url(#soft-glow)"/>
+  <ellipse cx="1728" cy="270" rx="672" ry="378" fill="url(#glow-5)" filter="url(#soft-glow)"/>
+
+  <!-- Abstract flowing waves - increased opacity -->
+  <g opacity="0.25" filter="url(#soft-glow)">
+    <path d="M -100 540 C 300 200, 700 800, 1200 400 C 1600 100, 2000 700, 2100 540 L 2100 1180 L -100 1180 Z" fill="#8B35FF"/>
+    <path d="M -100 680 C 200 900, 800 200, 1300 700 C 1700 1100, 2100 400, 2200 680 L 2200 1180 L -100 1180 Z" fill="#A855F7" opacity="0.18"/>
+    <path d="M -100 400 C 400 600, 900 100, 1400 500 C 1800 850, 2200 300, 2300 400 L 2300 1180 L -100 1180 Z" fill="#6B25D1" opacity="0.14"/>
+  </g>
+
+  <!-- Subtle geometric accents - increased opacity -->
+  <g opacity="0.12">
+    <circle cx="400" cy="200" r="120" fill="#8B35FF" filter="url(#soft-glow)"/>
+    <circle cx="1500" cy="900" r="180" fill="#A855F7" filter="url(#soft-glow)"/>
+    <circle cx="1000" cy="150" r="90" fill="#6B25D1" filter="url(#soft-glow)"/>
+    <ellipse cx="200" cy="850" rx="150" ry="80" fill="#8B35FF" filter="url(#soft-glow)"/>
+    <ellipse cx="1720" cy="100" rx="200" ry="100" fill="#A855F7" filter="url(#soft-glow)"/>
+  </g>
+
+  <!-- Fine diagonal line pattern for texture - increased opacity -->
+  <g stroke="rgba(139,53,255,0.04)" stroke-width="0.5" opacity="0.8">
+    <line x1="0" y1="0" x2="1920" y2="1080"/>
+    <line x1="200" y1="0" x2="1920" y2="880"/>
+    <line x1="400" y1="0" x2="1920" y2="680"/>
+    <line x1="600" y1="0" x2="1920" y2="480"/>
+    <line x1="800" y1="0" x2="1920" y2="280"/>
+    <line x1="1000" y1="0" x2="1920" y2="80"/>
+    <line x1="-200" y1="0" x2="1720" y2="1080"/>
+    <line x1="-400" y1="0" x2="1520" y2="1080"/>
+    <line x1="-600" y1="0" x2="1320" y2="1080"/>
+    <line x1="-800" y1="0" x2="1120" y2="1080"/>
+  </g>
+
+  <!-- Subtle vignette -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+    <stop offset="70%" stop-color="rgba(0,0,0,0)"/>
+    <stop offset="100%" stop-color="rgba(5,4,8,0.3)"/>
+  </radialGradient>
+  <rect width="1920" height="1080" fill="url(#vignette)"/>
+
+  <!-- Fine noise overlay - increased -->
+  <rect width="1920" height="1080" fill="rgba(139,53,255,0.02)" filter="url(#noise)"/>
+</svg>

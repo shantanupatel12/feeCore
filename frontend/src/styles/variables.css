@@ -1,0 +1,103 @@
+:root {
+  /* ============================================================
+     FEECORE UNIVERSAL — DARK PURPLE FINTECH PALETTE
+     ============================================================ */
+  --color-background: #080711;
+  --color-surface: #100D1B;
+  --color-surface-elevated: #151323;
+  --color-surface-hover: #1C1830;
+  --color-primary: #8B35FF;
+  --color-primary-hover: #A855F7;
+  --color-primary-soft: rgba(139, 53, 255, 0.14);
+  --color-text: #F8F7FC;
+  --color-text-secondary: #AAA5BB;
+  --color-text-muted: #777187;
+  --color-border: rgba(190, 175, 220, 0.14);
+  --color-success: #35C98B;
+  --color-warning: #F3B84B;
+  --color-danger: #FF647C;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 320ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 18px 36px -6px rgba(0, 0, 0, 0.6), 0 6px 16px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 28px 56px -10px rgba(0, 0, 0, 0.7);
+
+  /* Legacy aliases for backward compatibility */
+  --bg-primary: var(--color-background);
+  --bg-sidebar: var(--color-surface);
+  --bg-card: var(--color-surface);
+  --bg-surface: var(--color-surface);
+  --bg-elevated: var(--color-surface-elevated);
+  --bg-secondary: var(--color-surface-hover);
+  --bg-tertiary: var(--color-surface-hover);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-hover: var(--color-surface-hover);
+  --border-subtle: var(--color-border);
+  --border-medium: var(--color-border);
+  --border-strong: var(--color-border);
+  --border-focus: var(--color-primary);
+  --border-glow: var(--color-primary-soft);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --text-inverse: var(--color-background);
+  --brand-primary: var(--color-primary);
+  --brand-primary-hover: var(--color-primary-hover);
+  --brand-primary-active: var(--color-primary);
+  --brand-primary-subtle: var(--color-primary-soft);
+  --brand-primary-border: var(--color-border);
+  --brand-secondary: var(--color-primary-hover);
+  --brand-gradient: linear-gradient(135deg, #8B35FF 0%, #6B25D1 100%);
+  --brand-glow: 0 4px 18px rgba(139, 53, 255, 0.4);
+  --status-paid: var(--color-success);
+  --status-paid-bg: rgba(53, 201, 139, 0.12);
+  --status-paid-border: rgba(53, 201, 139, 0.28);
+  --status-paid-glow: rgba(53, 201, 139, 0.3);
+  --status-overdue: var(--color-danger);
+  --status-overdue-bg: rgba(255, 100, 124, 0.12);
+  --status-overdue-border: rgba(255, 100, 124, 0.28);
+  --status-overdue-glow: rgba(255, 100, 124, 0.3);
+  --status-partial: var(--color-warning);
+  --status-partial-bg: rgba(243, 184, 75, 0.12);
+  --status-partial-border: rgba(243, 184, 75, 0.28);
+  --status-pending: #60A5FA;
+  --status-pending-bg: rgba(96, 165, 250, 0.12);
+  --status-pending-border: rgba(96, 165, 250, 0.28);
+  --status-voided: var(--color-text-muted);
+  --status-voided-bg: rgba(119, 113, 135, 0.10);
+  --status-voided-border: rgba(119, 113, 135, 0.20);
+  --chart-primary: var(--color-primary);
+  --chart-secondary: var(--color-warning);
+  --chart-tertiary: var(--color-success);
+  --chart-grid: var(--color-border);
+}
