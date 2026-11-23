@@ -6,21 +6,24 @@ import {
 } from '../validators/reports-query.dto.js';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../auth/guards/roles.guard.js';
+import { Roles } from '../../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
 import { JwtPayload } from '../../auth/auth.service.js';
+import { UserRole } from '@prisma/client';
 
 /**
- * `reports:collection:view` and `reports:dues:view` are ALLOW for
- * Admin, Collector and Viewer, so no role narrowing is applied here
- * beyond the global guards. (`reports:export` is a separate,
- * Admin-only permission and is not implemented in this MVP.)
+ * Reports endpoints. Restricted to Admin and Collector roles;
+ * individual account holders (ROLE_VIEWER) must not inspect
+ * tenant-wide financial collections or aging schedules.
  */
 @Controller('tenants/:tenantId/reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('collections')
+  @Roles(UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR)
   async collectionReport(
     @CurrentUser() user: JwtPayload,
     @Query() query: CollectionReportQueryDto,
@@ -30,6 +33,7 @@ export class ReportsController {
   }
 
   @Get('dues')
+  @Roles(UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR)
   async duesReport(
     @CurrentUser() user: JwtPayload,
     @Query() query: DuesReportQueryDto,

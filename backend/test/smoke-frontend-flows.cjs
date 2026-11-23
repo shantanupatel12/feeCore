@@ -62,13 +62,14 @@ async function run() {
 
   // 3. PEOPLE
   console.log('\n3. Testing People (Create & List)...');
+  const uniquePhone = `+91${Date.now().toString().slice(-10)}`;
   const personRes = await request(
     'POST',
     `/tenants/${TENANT_ID}/people`,
     {
       fullName: 'Rahul Sharma',
-      primaryPhone: '+919876543210',
-      email: 'rahul.sharma@example.com',
+      primaryPhone: uniquePhone,
+      email: `rahul.${Date.now()}@example.com`,
     },
     token,
   );

@@ -99,6 +99,7 @@ export class RouteAliasesController {
 
   /** FR-REP-01 — `GET /api/v1/reports/collections`. */
   @Get('reports/collections')
+  @Roles(UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR)
   async collectionReport(
     @CurrentUser() user: JwtPayload,
     @Query() query: CollectionReportQueryDto,
@@ -108,6 +109,7 @@ export class RouteAliasesController {
 
   /** FR-REP-02 — `GET /api/v1/reports/dues`. */
   @Get('reports/dues')
+  @Roles(UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR)
   async duesReport(
     @CurrentUser() user: JwtPayload,
     @Query() query: DuesReportQueryDto,

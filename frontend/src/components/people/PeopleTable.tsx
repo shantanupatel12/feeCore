@@ -42,7 +42,7 @@ export const PeopleTable: React.FC<Props> = ({
 }) => {
   const { pSingular, pPlural } = useTerminology();
   const canManagePeople = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_COLLECTOR';
-  const canManageStatus = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_COLLECTOR';
+  const canManageStatus = userRole === 'ROLE_ADMIN';
 
   const formatCurrency = (minorUnitsStr: string) => {
     const amount = (parseInt(minorUnitsStr, 10) || 0) / 100;

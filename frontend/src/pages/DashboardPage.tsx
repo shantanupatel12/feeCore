@@ -48,7 +48,7 @@ function canAccessTab(userRole: UserRole | null, tab: NavTabId): boolean {
     dues: ['ROLE_ADMIN', 'ROLE_COLLECTOR'],
     payments: ['ROLE_ADMIN', 'ROLE_COLLECTOR'],
     receipts: ['ROLE_ADMIN', 'ROLE_COLLECTOR', 'ROLE_VIEWER'],
-    reports: ['ROLE_ADMIN', 'ROLE_COLLECTOR', 'ROLE_VIEWER'],
+    reports: ['ROLE_ADMIN', 'ROLE_COLLECTOR'],
     activity: ['ROLE_ADMIN'],
     settings: ['ROLE_ADMIN'],
   };
@@ -68,6 +68,7 @@ export const DashboardPage: React.FC = () => {
   const { session } = useAuth();
   const tenantId = session?.user.tenantId ?? null;
   const userRole = (session?.user.role as UserRole) ?? null;
+  const canManageOperations = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_COLLECTOR';
 
   const { pSingular, pPlural, cSingular, cPlural } = useTerminology();
 
@@ -456,16 +457,16 @@ export const DashboardPage: React.FC = () => {
               openDueCount={duesCount}
               recentDues={dues.slice(0, 5)}
               recentReceipts={receipts.slice(0, 5)}
-              onOpenChargeModal={() => setIsChargeModalOpen(true)}
-              onOpenPlanModal={() => setIsPlanModalOpen(true)}
-              onAddPerson={() => setIsPersonModalOpen(true)}
-              onRecordPayment={() => {
+              onOpenChargeModal={canManageOperations ? () => setIsChargeModalOpen(true) : undefined}
+              onOpenPlanModal={canManageOperations ? () => setIsPlanModalOpen(true) : undefined}
+              onAddPerson={canManageOperations ? () => setIsPersonModalOpen(true) : undefined}
+              onRecordPayment={canManageOperations ? () => {
                 if (dues.length > 0) setCollectingDue(dues[0]);
                 else setActiveTab('dues');
-              }}
-              onViewAllDues={() => setActiveTab('dues')}
-              onViewAllPayments={() => setActiveTab('payments')}
-              onCollectDue={onCollectPayment}
+              } : undefined}
+              onViewAllDues={canManageOperations ? () => setActiveTab('dues') : undefined}
+              onViewAllPayments={canManageOperations ? () => setActiveTab('payments') : undefined}
+              onCollectDue={canManageOperations ? onCollectPayment : undefined}
               onViewReceipt={(r) => setViewingReceipt(r)}
             />
           )}

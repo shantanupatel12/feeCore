@@ -683,7 +683,7 @@ describe('Reports RBAC and JWT tenant scoping', () => {
     expect(seen).not.toContain(TENANT_B);
   });
 
-  it('declares no @Roles restriction (both reports are ALLOW-all)', () => {
+  it('declares @Roles(ROLE_ADMIN, ROLE_COLLECTOR) restriction', () => {
     const collRoles = Reflect.getMetadata(
       ROLES_KEY,
       ReportsController.prototype.collectionReport,
@@ -692,8 +692,8 @@ describe('Reports RBAC and JWT tenant scoping', () => {
       ROLES_KEY,
       ReportsController.prototype.duesReport,
     );
-    expect(collRoles).toBeUndefined();
-    expect(duesRoles).toBeUndefined();
+    expect(collRoles).toEqual([UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR]);
+    expect(duesRoles).toEqual([UserRole.ROLE_ADMIN, UserRole.ROLE_COLLECTOR]);
   });
 });
 

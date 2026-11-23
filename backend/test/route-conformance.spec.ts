@@ -336,20 +336,32 @@ describe('V1.30: SRS route conformance', () => {
       );
       expect(rolesOf(RouteAliasesController, 'refundAllocation')).toEqual(['ROLE_ADMIN']);
 
+      // Reports: Admin and Collector on both paths.
+      expect(rolesOf(RouteAliasesController, 'collectionReport')).toEqual(
+        rolesOf(ReportsController, 'collectionReport'),
+      );
+      expect(rolesOf(RouteAliasesController, 'collectionReport')).toEqual([
+        'ROLE_ADMIN',
+        'ROLE_COLLECTOR',
+      ]);
+      expect(rolesOf(RouteAliasesController, 'duesReport')).toEqual(
+        rolesOf(ReportsController, 'duesReport'),
+      );
+      expect(rolesOf(RouteAliasesController, 'duesReport')).toEqual([
+        'ROLE_ADMIN',
+        'ROLE_COLLECTOR',
+      ]);
+
       // Read routes are ALLOW for every role, so neither side narrows.
       for (const [owner, handler] of [
         [RouteAliasesController, 'searchPeople'],
         [RouteAliasesController, 'dashboardMetrics'],
-        [RouteAliasesController, 'collectionReport'],
-        [RouteAliasesController, 'duesReport'],
       ] as const) {
         expect(rolesOf(owner, handler)).toBeUndefined();
       }
       for (const [owner, handler] of [
         [PeopleController, 'findAll'],
         [DashboardController, 'getMetrics'],
-        [ReportsController, 'collectionReport'],
-        [ReportsController, 'duesReport'],
       ] as const) {
         expect(rolesOf(owner, handler)).toBeUndefined();
       }
@@ -415,6 +427,20 @@ describe('V1.30: SRS route conformance', () => {
       }
       authorize(RouteAliasesController, 'refundAllocation', 'admin-a');
       authorize(RefundsController, 'refundAllocation', 'admin-a');
+
+      // reports: Admin & Collector allowed, Viewer denied.
+      for (const handler of ['collectionReport', 'duesReport'] as const) {
+        expect(() => authorize(RouteAliasesController, handler, 'viewer-a')).toThrow(
+          ForbiddenException,
+        );
+        expect(() => authorize(ReportsController, handler, 'viewer-a')).toThrow(
+          ForbiddenException,
+        );
+        authorize(RouteAliasesController, handler, 'collector-a');
+        authorize(ReportsController, handler, 'collector-a');
+        authorize(RouteAliasesController, handler, 'admin-a');
+        authorize(ReportsController, handler, 'admin-a');
+      }
     });
 
     it('10. tenantId cannot be overridden through query, body or path', () => {

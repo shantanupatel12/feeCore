@@ -237,7 +237,7 @@ Financial platforms frequently fail at the boundary conditions: partial allocati
     WHERE recurring_plan_id IS NOT NULL;
     ```
   * Insertion uses `ON CONFLICT (tenant_id, recurring_plan_id, cycle_period_key) DO NOTHING`. Zero chance of duplicate due generation.
-* **Test Case:** `TC-EDGE-010` (Concurrent worker due generation idempotency test).
+* **Test Case:** `TC-EDGE-010` (Concurrent worker due generation idempotency test).  
 
 ---
 

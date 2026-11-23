@@ -144,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id: 'reports',
               label: 'Reports',
               icon: <ReportsIcon size={18} />,
-              roles: ['ROLE_ADMIN', 'ROLE_COLLECTOR', 'ROLE_VIEWER'],
+              roles: ['ROLE_ADMIN', 'ROLE_COLLECTOR'],
             },
             {
               id: 'activity',

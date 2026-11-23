@@ -28,8 +28,8 @@ interface DashboardOverviewProps {
   openDueCount: number;
   recentDues?: DueDto[];
   recentReceipts?: ReceiptDto[];
-  onOpenChargeModal: () => void;
-  onOpenPlanModal: () => void;
+  onOpenChargeModal?: () => void;
+  onOpenPlanModal?: () => void;
   onAddPerson?: () => void;
   onRecordPayment?: () => void;
   onViewAllDues?: () => void;
@@ -110,33 +110,39 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Global Action Buttons */}
-        <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          {onAddPerson && (
-            <button
-              onClick={onAddPerson}
-              className="btn btn-secondary"
-            >
-              <PeopleIcon size={14} color="var(--brand-primary)" />
-              <span>Add {pSingular}</span>
-            </button>
-          )}
+        {(onAddPerson || onOpenChargeModal || onRecordPayment) && (
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {onAddPerson && (
+              <button
+                onClick={onAddPerson}
+                className="btn btn-secondary"
+              >
+                <PeopleIcon size={14} color="var(--brand-primary)" />
+                <span>Add {pSingular}</span>
+              </button>
+            )}
 
-          <button
-            onClick={onOpenChargeModal}
-            className="btn btn-secondary"
-          >
-            <ChargesIcon size={14} color="var(--brand-primary)" />
-            <span>Create {cSingular}</span>
-          </button>
+            {onOpenChargeModal && (
+              <button
+                onClick={onOpenChargeModal}
+                className="btn btn-secondary"
+              >
+                <ChargesIcon size={14} color="var(--brand-primary)" />
+                <span>Create {cSingular}</span>
+              </button>
+            )}
 
-          <button
-            onClick={onRecordPayment || onOpenChargeModal}
-            className="btn btn-primary"
-          >
-            <PaymentsIcon size={14} color="#FFFFFF" />
-            <span>Record Payment</span>
-          </button>
-        </div>
+            {onRecordPayment && (
+              <button
+                onClick={onRecordPayment}
+                className="btn btn-primary"
+              >
+                <PaymentsIcon size={14} color="#FFFFFF" />
+                <span>Record Payment</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. THE BLOCKERA HERO SECTION (Reference Visual Authority) */}
@@ -378,28 +384,36 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
 
             {/* Quick Action Pill Buttons (Styled exactly like [Pay] [Withdraw] [Request] in Blockera tablet) */}
-            <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0 1.25rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={onRecordPayment || onOpenChargeModal}
-                className="btn-action-pill primary"
-              >
-                <span>↗ Record Pay</span>
-              </button>
+            {(onRecordPayment || onOpenChargeModal || onOpenPlanModal) && (
+              <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0 1.25rem', flexWrap: 'wrap' }}>
+                {onRecordPayment && (
+                  <button
+                    onClick={onRecordPayment}
+                    className="btn-action-pill primary"
+                  >
+                    <span>↗ Record Pay</span>
+                  </button>
+                )}
 
-              <button
-                onClick={onOpenChargeModal}
-                className="btn-action-pill"
-              >
-                <span>+ Assessment</span>
-              </button>
+                {onOpenChargeModal && (
+                  <button
+                    onClick={onOpenChargeModal}
+                    className="btn-action-pill"
+                  >
+                    <span>+ Assessment</span>
+                  </button>
+                )}
 
-              <button
-                onClick={onOpenPlanModal}
-                className="btn-action-pill"
-              >
-                <span>⇄ Recurring</span>
-              </button>
-            </div>
+                {onOpenPlanModal && (
+                  <button
+                    onClick={onOpenPlanModal}
+                    className="btn-action-pill"
+                  >
+                    <span>⇄ Recurring</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Sub-balances 3-box Breakdown (Matching sub-wallet balances in screenshot) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
@@ -718,7 +732,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     <th>Due Date</th>
                     <th>Balance</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    {onCollectDue && <th style={{ textAlign: 'right' }}>Action</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -754,16 +768,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         <td>
                           <StatusBadge status={due.status} />
                         </td>
-                        <td style={{ textAlign: 'right' }}>
-                          {due.balanceRemainingMinor !== '0' && onCollectDue && (
-                            <button
-                              onClick={() => onCollectDue(due)}
-                              className="btn btn-primary btn-xs"
-                            >
-                              Collect
-                            </button>
-                          )}
-                        </td>
+                        {onCollectDue && (
+                          <td style={{ textAlign: 'right' }}>
+                            {due.balanceRemainingMinor !== '0' && (
+                              <button
+                                onClick={() => onCollectDue(due)}
+                                className="btn btn-primary btn-xs"
+                              >
+                                Collect
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

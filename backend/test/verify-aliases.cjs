@@ -5,6 +5,7 @@
  *   node test/verify-aliases.cjs
  */
 require('reflect-metadata');
+BigInt.prototype.toJSON = function () { return this.toString(); };
 const path = require('path');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');

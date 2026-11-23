@@ -7,6 +7,7 @@ dist/
 build/
 .turbo/
 .next/
+*.tsbuildinfo
 
 # Environment files & Secrets
 .env
