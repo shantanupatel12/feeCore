@@ -11,6 +11,26 @@ interface Props {
   saveError?: string | null;
 }
 
+function validatePhoneNumber(phone: string): string | null {
+  if (!phone || !phone.trim()) {
+    return 'Primary phone number is required.';
+  }
+  const stripped = phone.trim().replace(/[\s\-().]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(stripped)) {
+    return 'Please enter a valid phone number (10 to 15 digits, e.g. +91 98765 43210 or 9876543210).';
+  }
+  return null;
+}
+
+function validateOptionalPhoneNumber(phone?: string): string | null {
+  if (!phone || !phone.trim()) return null;
+  const stripped = phone.trim().replace(/[\s\-().]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(stripped)) {
+    return 'Please enter a valid phone number (10 to 15 digits, e.g. +91 98765 43210).';
+  }
+  return null;
+}
+
 export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSave, saveError }) => {
   const { pSingular } = useTerminology();
 
@@ -19,6 +39,8 @@ export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSa
   const [secondaryPhone, setSecondaryPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [secondaryPhoneError, setSecondaryPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
@@ -28,6 +50,8 @@ export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSa
       setSecondaryPhone(person.secondaryPhone || '');
       setEmail(person.email || '');
       setAddress(person.address || '');
+      setPhoneError(null);
+      setSecondaryPhoneError(null);
     }
   }, [person]);
 
@@ -35,15 +59,20 @@ export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !primaryPhone) return;
+    const pErr = validatePhoneNumber(primaryPhone);
+    const sErr = validateOptionalPhoneNumber(secondaryPhone);
+    setPhoneError(pErr);
+    setSecondaryPhoneError(sErr);
+
+    if (pErr || sErr || !fullName.trim()) return;
 
     setIsSubmitting(true);
     await onSave(person.id, {
-      fullName,
-      primaryPhone,
-      secondaryPhone: secondaryPhone || undefined,
-      email: email || undefined,
-      address: address || undefined,
+      fullName: fullName.trim(),
+      primaryPhone: primaryPhone.trim(),
+      secondaryPhone: secondaryPhone.trim() || undefined,
+      email: email.trim() || undefined,
+      address: address.trim() || undefined,
     });
     setIsSubmitting(false);
   };
@@ -118,10 +147,18 @@ export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSa
               type="tel"
               required
               value={primaryPhone}
-              onChange={(e) => setPrimaryPhone(e.target.value)}
+              onChange={(e) => {
+                setPrimaryPhone(e.target.value);
+                if (phoneError) setPhoneError(validatePhoneNumber(e.target.value));
+              }}
               disabled={isSubmitting}
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: phoneError ? 'var(--status-overdue)' : undefined }}
             />
+            {phoneError && (
+              <div style={{ color: 'var(--status-overdue)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {phoneError}
+              </div>
+            )}
           </div>
 
           <div>
@@ -129,10 +166,18 @@ export const EditPersonModal: React.FC<Props> = ({ isOpen, person, onClose, onSa
             <input
               type="tel"
               value={secondaryPhone}
-              onChange={(e) => setSecondaryPhone(e.target.value)}
+              onChange={(e) => {
+                setSecondaryPhone(e.target.value);
+                if (secondaryPhoneError) setSecondaryPhoneError(validateOptionalPhoneNumber(e.target.value));
+              }}
               disabled={isSubmitting}
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: secondaryPhoneError ? 'var(--status-overdue)' : undefined }}
             />
+            {secondaryPhoneError && (
+              <div style={{ color: 'var(--status-overdue)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {secondaryPhoneError}
+              </div>
+            )}
           </div>
 
           <div>

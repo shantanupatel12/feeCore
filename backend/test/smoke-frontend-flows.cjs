@@ -174,7 +174,7 @@ async function run() {
   console.log('\n9. Testing Reports...');
   const colReport = await request('GET', `/tenants/${TENANT_ID}/reports/collections`, null, token);
   if (colReport.status !== 200) throw new Error(`Collection report failed: ${colReport.status}`);
-  console.log(`✓ Collection report loaded (${colReport.body.items?.length} payments, Net Collected: ₹${Number(colReport.body.totals?.totalNetCollectedMinor)/100})`);
+  console.log(`✓ Collection report loaded (${colReport.body.items?.length} payments, Net Collected: ₹${Number(colReport.body.totals?.netCollectedMinor)/100})`);
 
   const duesReport = await request('GET', `/tenants/${TENANT_ID}/reports/dues`, null, token);
   if (duesReport.status !== 200) throw new Error(`Dues report failed: ${duesReport.status}`);

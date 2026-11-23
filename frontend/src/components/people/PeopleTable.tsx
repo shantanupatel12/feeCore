@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTerminology } from '../../contexts/TerminologyContext.js';
 import { PersonDto, UserRole } from '@feecore/shared-types';
 import { StatusBadge } from '../common/StatusBadge.js';
-import { PlusIcon, SearchIcon, DownloadIcon } from '../common/Icons.js';
+import { PlusIcon, SearchIcon, DownloadIcon, CloseIcon } from '../common/Icons.js';
 
 interface Props {
   people: PersonDto[];
@@ -43,6 +43,8 @@ export const PeopleTable: React.FC<Props> = ({
   const { pSingular, pPlural } = useTerminology();
   const canManagePeople = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_COLLECTOR';
   const canManageStatus = userRole === 'ROLE_ADMIN';
+  const [deactivatingPerson, setDeactivatingPerson] = useState<PersonDto | null>(null);
+  const [isSubmittingDeactivation, setIsSubmittingDeactivation] = useState(false);
 
   const formatCurrency = (minorUnitsStr: string) => {
     const amount = (parseInt(minorUnitsStr, 10) || 0) / 100;
@@ -213,7 +215,7 @@ export const PeopleTable: React.FC<Props> = ({
                         )}
                         {canManageStatus && (
                           <button
-                            onClick={() => onDeactivatePerson(person)}
+                            onClick={() => setDeactivatingPerson(person)}
                             className="btn btn-secondary btn-xs"
                             style={{
                               color: person.status === 'INACTIVE' ? 'var(--text-muted)' : 'var(--status-overdue)',
@@ -269,6 +271,97 @@ export const PeopleTable: React.FC<Props> = ({
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+      {/* Deactivation Confirmation Dialog */}
+      {deactivatingPerson && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(37, 34, 31, 0.55)',
+            backdropFilter: 'blur(2px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              width: '100%',
+              maxWidth: '460px',
+              padding: '1.75rem',
+              boxShadow: 'var(--shadow-xl)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Confirm Deactivation
+                </h2>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Deactivate {pSingular.toLowerCase()} profile
+                </p>
+              </div>
+              <button
+                onClick={() => { if (!isSubmittingDeactivation) setDeactivatingPerson(null); }}
+                disabled={isSubmittingDeactivation}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '0.25rem' }}
+              >
+                <CloseIcon size={16} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: 'var(--status-overdue-bg)',
+                border: '1px solid var(--status-overdue-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.875rem 1rem',
+                marginBottom: '1.25rem',
+                fontSize: '0.8125rem',
+                color: 'var(--text-primary)',
+                lineHeight: 1.5,
+              }}
+            >
+              Are you sure you want to deactivate <strong>{deactivatingPerson.fullName}</strong>?
+              <div style={{ marginTop: '0.375rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                This {pSingular.toLowerCase()} will become <strong>inactive</strong>. They will no longer be eligible for new charges or automated dues generation. Existing financial transactions, payments, and receipt history will remain preserved.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setDeactivatingPerson(null)}
+                disabled={isSubmittingDeactivation}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!deactivatingPerson || isSubmittingDeactivation) return;
+                  setIsSubmittingDeactivation(true);
+                  try {
+                    await Promise.resolve(onDeactivatePerson(deactivatingPerson));
+                    setDeactivatingPerson(null);
+                  } finally {
+                    setIsSubmittingDeactivation(false);
+                  }
+                }}
+                disabled={isSubmittingDeactivation}
+                className="btn btn-danger"
+              >
+                {isSubmittingDeactivation ? 'Deactivating…' : `Deactivate ${pSingular}`}
+              </button>
+            </div>
           </div>
         </div>
       )}

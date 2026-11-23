@@ -168,6 +168,18 @@ export const DashboardPage: React.FC = () => {
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState<PersonDto | null>(null);
   const [isGeneratingDues, setIsGeneratingDues] = useState(false);
+  const [receiptsSearch, setReceiptsSearch] = useState('');
+
+  const filteredReceipts = useMemo(() => {
+    if (!receiptsSearch.trim()) return receipts;
+    const q = receiptsSearch.trim().toLowerCase();
+    return receipts.filter((r) => {
+      const num = r.receiptNumber?.toLowerCase() ?? '';
+      const payer = r.snapshot?.payer?.fullName?.toLowerCase() ?? '';
+      const mode = r.snapshot?.payment?.paymentMode?.toLowerCase() ?? '';
+      return num.includes(q) || payer.includes(q) || mode.includes(q);
+    });
+  }, [receipts, receiptsSearch]);
   const [isCreatingCharge, setIsCreatingCharge] = useState(false);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [chargeSaveError, setChargeSaveError] = useState<string | null>(null);
@@ -540,9 +552,9 @@ export const DashboardPage: React.FC = () => {
       {/* 6. Receipts */}
       {activeTab === 'receipts' && (
         <ReceiptsTable
-          receipts={receipts}
-          searchTerm=""
-          onSearchChange={() => {}}
+          receipts={filteredReceipts}
+          searchTerm={receiptsSearch}
+          onSearchChange={setReceiptsSearch}
           onReceiptClick={(r) => setViewingReceipt(r)}
           isLoading={receiptsLoading}
           error={receiptsError}

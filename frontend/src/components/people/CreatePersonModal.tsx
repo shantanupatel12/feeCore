@@ -14,6 +14,26 @@ interface Props {
   }) => void;
 }
 
+function validatePhoneNumber(phone: string): string | null {
+  if (!phone || !phone.trim()) {
+    return 'Primary phone number is required.';
+  }
+  const stripped = phone.trim().replace(/[\s\-().]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(stripped)) {
+    return 'Please enter a valid phone number (10 to 15 digits, e.g. +91 98765 43210 or 9876543210).';
+  }
+  return null;
+}
+
+function validateOptionalPhoneNumber(phone?: string): string | null {
+  if (!phone || !phone.trim()) return null;
+  const stripped = phone.trim().replace(/[\s\-().]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(stripped)) {
+    return 'Please enter a valid phone number (10 to 15 digits, e.g. +91 98765 43210).';
+  }
+  return null;
+}
+
 export const CreatePersonModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
   const { pSingular } = useTerminology();
   const [fullName, setFullName] = useState('');
@@ -21,25 +41,34 @@ export const CreatePersonModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }
   const [secondaryPhone, setSecondaryPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [secondaryPhoneError, setSecondaryPhoneError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !primaryPhone) return;
+    const pErr = validatePhoneNumber(primaryPhone);
+    const sErr = validateOptionalPhoneNumber(secondaryPhone);
+    setPhoneError(pErr);
+    setSecondaryPhoneError(sErr);
+
+    if (pErr || sErr || !fullName.trim()) return;
 
     onSubmit({
-      fullName,
-      primaryPhone,
-      secondaryPhone: secondaryPhone || undefined,
-      email: email || undefined,
-      address: address || undefined,
+      fullName: fullName.trim(),
+      primaryPhone: primaryPhone.trim(),
+      secondaryPhone: secondaryPhone.trim() || undefined,
+      email: email.trim() || undefined,
+      address: address.trim() || undefined,
     });
     setFullName('');
     setPrimaryPhone('');
     setSecondaryPhone('');
     setEmail('');
     setAddress('');
+    setPhoneError(null);
+    setSecondaryPhoneError(null);
     onClose();
   };
 
@@ -94,10 +123,18 @@ export const CreatePersonModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }
               type="tel"
               required
               value={primaryPhone}
-              onChange={(e) => setPrimaryPhone(e.target.value)}
+              onChange={(e) => {
+                setPrimaryPhone(e.target.value);
+                if (phoneError) setPhoneError(validatePhoneNumber(e.target.value));
+              }}
               placeholder="+91 98765 43210"
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: phoneError ? 'var(--status-overdue)' : undefined }}
             />
+            {phoneError && (
+              <div style={{ color: 'var(--status-overdue)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {phoneError}
+              </div>
+            )}
           </div>
 
           <div>
@@ -105,10 +142,18 @@ export const CreatePersonModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }
             <input
               type="tel"
               value={secondaryPhone}
-              onChange={(e) => setSecondaryPhone(e.target.value)}
+              onChange={(e) => {
+                setSecondaryPhone(e.target.value);
+                if (secondaryPhoneError) setSecondaryPhoneError(validateOptionalPhoneNumber(e.target.value));
+              }}
               placeholder="+91 98765 00000"
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: secondaryPhoneError ? 'var(--status-overdue)' : undefined }}
             />
+            {secondaryPhoneError && (
+              <div style={{ color: 'var(--status-overdue)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {secondaryPhoneError}
+              </div>
+            )}
           </div>
 
           <div>
